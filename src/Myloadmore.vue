@@ -137,131 +137,164 @@ export default {
   watch: {},
 
   methods: {
-    init() {
-      this.topStatus = "pull";
-      this.bottomStatus = "pull";
-      this.bottomText = this.bottomPullText;
-      this.topText = this.topPullText;
-      this.scrollEventTarget = this.getScrollEventTarget(this.$el);
-      if (
-        typeof this.topMethod === "function" ||
-        typeof this.bottomMethod === "function"
-      ) {
-        this.bindTouchEvents();
-      }
-      if (typeof this.bottomMethod === "function" && this.autoFill) {
-        this.fillContainer();
-      }
-    },
     getScrollEventTarget(el) {
-      let currentnode = el;
+      var currentEle = el;
       while (
-        currentnode &&
-        currentnode.tagName !== "HTML" &&
-        currentnode.tagName !== "BODY" &&
-        currentnode.nodeType == 1
+        currentEle.tagName != "BODY" &&
+        currentEle.tagName != "HTML" &&
+        currentEle.nodeType == 1
       ) {
-        let overflowy = currentnode.defaultView.getComputedStyle(currentnode)
-          .overflowY;
-        if (overflowy == "scroll" || overflowy == "auto") {
-          return currentnode;
+        if (
+          window.getComputedStyle(currentEle).overflowY == "auto" ||
+          window.getComputedStyle(currentEle).overflowY == "scroll"
+        ) {
+          return currentEle;
+        } else {
+          currentEle = currentEle.parentNode;
         }
       }
       return window;
     },
-    fillContainer() {
-      this.$nextTick(() => {
-        if (this.scrollEventTarget == window) {
-          this.containerFilled =
-            this.$el.getBoundingClientRect().bottom >=
-            document.documentElement.getBoundingClientRect().bottom;
-        } else {
-          this.containerFilled =
-            this.$el.getBoundingClientRect().bottom >=
-            this.scrollEventTarget.getBoundingClientRect().bottom;
-        }
-        if (!this.containerFilled) {
-          this.bottomStatus = "loading";
-          this.bottomMethod();
-        }
-      });
-    },
     getScrollTop(el) {
       if (el == window) {
         return Math.max(
-          window.pageYOffset || 0,
+          window.pageXOffset || 0,
           document.documentElement.scrollTop
         );
       } else {
         return el.scrollTop;
       }
     },
+    init() {
+      (this.topStatus = "pull"),
+        (this.bottomStatus = "pull"),
+        (this.topText = this.topPullText);
+      this.bottomText = this.bottomPullText;
+      this.scrollEventTarget = this.getScrollEventTarget(this.$el);
+      if (this.autoFill) {
+        this.fillContainer();
+      }
+      if (
+        typeof this.topMethod == "function" ||
+        typeof this.bottomMethod == "function"
+      ) {
+        this.bindTouchEvents();
+      }
+    },
     bindTouchEvents() {
-      this.$el.addEventListener("touchstart", this.handleTouchStart);
-      this.$el.addEventListener("touchmove", this.handleTouchMove);
-      this.$el.addEventListener("touchend", this.handleTouchEnd);
+      this.$el.addEventListener("touchstart", handleTouchStart);
+      this.$el.addEventListener("touchmove", handleTouchMove);
+      this.$el.addEventListener("touchend", handleTouchEnd);
+    },
+    fillContainer() {
+      if (!this.autoFill) {
+        return false;
+      }
+      this.$nextTick(() => {
+        //
+        if (this.scrollEventTarget == window) {
+          this.containerFilled =
+            this.$el.getBoundingClientRect().bottom >=
+            document.documentElement.clientHeight; //document.documentElement.clientHeight 如果html没撑满window返回的也是屏幕的高度
+        } else {
+          this.containerFilled =
+            this.$el.getBoundingClientRect().bottom >=
+            this.scrollEventTarget.getBoundingClientRect().bottom;
+        }
+
+        if (!this.containerFilled) {
+          this.bottomStatus = "loadding"; //
+          this.bottomMethod();
+        }
+      });
     },
     handleTouchStart(event) {
+      if (this.topStatus == "loading" || this.bottomStatus == "loading") {
+        return false;
+      }
       this.startY = event.touchs[0].clientY;
-      this.startScrollTop = this.getScrollTop(this.scrollEventTarget);
+      this.startScrollTop = this.getScrollEventTarget(this.scrollEventTarget);
+      this.topStatus = "pull";
+      this.bottomStatus = "pull";
+      this.topDropped = false;
+      this.bottomDropped = false;
     },
     handleTouchMove(event) {
       if (
-        this.startY > this.scrollEventTarget.getBoundingClientRect().bottom ||
-        this.startY < this.scrollEventTarget.getBoundingClientRect().top
+        this.startY < this.$el.getBoundingClientRect().top ||
+        this.startY > this.$el.getBoundingClientRect().bottom
       ) {
-        return false;
+        //
+        return;
       }
-      event.preventDefault();
-      event.stopPropagation();
       this.currentY = event.touchs[0].clientY;
-      let distance = (this.currentY - this.startY) / this.distanceIndex;
-      if (this.distance > 0) {
-        this.direction = "down";
-      } else {
-        this.direction = "up";
-      }
+      var distance = (this.currentY - this.startY) / this.distanceIndex;
+      this.direction = this.distance > 0 ? "down" : "up";
+      event.stopPropagation();
+      event.preventDefault();
       if (
-        typeof this.topMethod == "function" &&
         this.direction == "down" &&
-        this.topStatus != "loading" &&
-        this.getScrollTop(this.getScrollEventTarget) == 0
+        typeof this.topMethod == "function" &&
+        this.getScrollTop(this.scrollEventTarget) == 0
       ) {
+        //第三个条件很精髓
         if (this.maxDistance > 0) {
           this.translate =
-            distance - this.startScrollTop <= this.maxDistance
-              ? distance - this.startScrollTop
-              : this.translate;
+            distance - this.startScrollTop > maxDistance
+              ? this.translate
+              : distance - this.startScrollTop;
         } else {
           this.translate = distance - this.startScrollTop;
         }
-
-        this.topStatus = this.translate > this.topDistance ? "drop" : "pull";
-        if (this.translate < 0) {
+        if (this.translate <= 0) {
           this.translate = 0;
         }
+        this.topStatus = this.translate >= this.topDistance ? "drop" : "pull";
       }
 
-      if (this.direction == "up") {
+      if (this.direction === "up") {
         this.bottomReached = this.bottomReached || this.checkBottomReached();
-       
       }
-       if(this.bottomReached&&typeof this.bottomMethod === 'function'&&this.direction=='up'&&this.bottomStatus!='loading'&!this.bottomAllLoaded){
-           if(this.maxDistance>0){
-               this.translate = Math.abs(this.translate)<=this.maxDistance?this.getScrollTop(this.scrollEventTarget) - this.startScrollTop+distance:this.translate
-           }
-       }
+      if (
+        typeof this.bottomMethod === "function" &&
+        this.direction === "up" &&
+        this.bottomReached &&
+        this.bottomStatus !== "loading" &&
+        !this.bottomAllLoaded
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (this.maxDistance > 0) {
+          this.translate =
+            Math.abs(distance) <= this.maxDistance
+              ? this.getScrollTop(this.scrollEventTarget) -
+                this.startScrollTop +
+                distance
+              : this.translate;
+        } else {
+          this.translate =
+            this.getScrollTop(this.scrollEventTarget) -
+            this.startScrollTop +
+            distance;
+        }
+        if (this.translate > 0) {
+          this.translate = 0;
+        }
+        this.bottomStatus =
+          -this.translate >= this.bottomDistance ? "drop" : "pull";
+      }
     },
-    handleTouchEnd() {},
-    checkBottomReached() {
-      if (this.scrollEventTarget == window) {
-        return (
-          document.documentElement.scrollTop +document.documentElement.clientHeight >= document.documentElement.scrollHeight
-        );
-      } else {
-        return (
-          this.$el.getBoundingClientRect().bottom <= this.scrollEventTarget.getBoundingClientRect().bottom + 1
-        );
+    handleTouchEnd(event){
+      if(this.direction === 'down' && this.getScrollTop(this.scrollEventTarget) === 0 && this.translate > 0){
+        this.topDropped = true;
+          if (this.topStatus === 'drop') {
+            this.translate = '50';
+            this.topStatus = 'loading';
+            this.topMethod();
+          } else {
+            this.translate = '0';
+            this.topStatus = 'pull';
+          }
       }
     }
   },

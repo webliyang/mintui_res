@@ -22,7 +22,7 @@
 
   .page-back {
     display: inline-block;
-    position: absolute 12px * * 10px;
+    position: absolute 12px  10px;
     width: 40px;
     height: 40px;
     text-align: center;
