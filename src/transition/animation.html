@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<style>
+    .snake{
+        width: 32px;
+        height: 32px;
+        border: 4px solid rgb(204, 204, 204);
+        border-bottom: 4px solid transparent;
+        animation: snakeRotate 0.8s infinite linear;
+        border-radius: 50%;
+    }
+    @keyframes snakeRotate {
+        0% {
+            transform: rotateZ(0)
+        }
+        100% {
+            transform: rotateZ(360deg)
+        }
+    }
+</style>
+<body>
+    <div class="snake"></div>
+</body>
+</html>

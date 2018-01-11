@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.js"></script>
+</head>
+<style>
+    *{
+        margin:0;
+        padding:0;
+    }
+    .one {
+        height: 240px;
+        width: 240px;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        margin: auto;
+        background-color:pink;
+        perspective: 1000px;  
+        /* 最高级父盒子要有这个属性 子元素才有3d动画效果 */
+    }
+    .par{
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        transform: translateZ(-120px) rotateX(0deg);
+        transform-style: preserve-3d;
+        transition: all 0.5s;
+        /* perspective: 1000px;   */
+
+    }
+    .child{
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background-color:black;
+        color:white;
+        text-align: center;
+        line-height: 100%;
+    }
+    .child:nth-child(1){
+        transform: rotateY(0) translateZ(120px);
+    }
+    .child:nth-child(2){
+        transform: rotateY(90deg) translateZ(120px);
+    }
+    .child:nth-child(3){
+        transform: rotateX(180deg) translateZ(120px);
+    }
+    .child:nth-child(4){
+        transform: rotateY(-90deg) translateZ(120px);
+    }
+    .child:nth-child(5){
+        transform: rotateX(-90deg) translateZ(120px);
+    }
+    .child:nth-child(6){
+        transform: rotateX(90deg) translateZ(120px);
+    }
+</style>
+<body>
+    <div class="one">
+        <div class="par">
+            <div class="child">第一层 <button id="btn1">点击</button></div>
+            <div class="child">第二层</div>
+            <div class="child">第三层</div>
+            <div class="child">第四层</div>
+            <div class="child">第五层</div>
+            <div class="child">第六层</div>
+        </div>
+    </div>
+    <script>
+        $('#btn1').on('click',function(){
+            console.log('asda')
+            $('.par').css({
+                transform : 'translateZ(-120px) rotateX(90deg)'
+            })
+        })
+    
+    
+    </script>
+</body>
+</html>
